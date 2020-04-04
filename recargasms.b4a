@@ -1,0 +1,170 @@
+﻿Build1=Default,b4a.example
+File1=home.bal
+FileGroup1=Default Group
+Group=Default Group
+IconFile=
+Library1=core
+Library2=phone
+Library3=tts
+Library4=dialogs
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="26"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.DarkTheme)~\n~'End of default text.~\n~
+Module1=Starter
+NumberOfFiles=1
+NumberOfLibraries=4
+NumberOfModules=1
+Version=9.01
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: Recarga Prepago SMS
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Public TTS As TTS
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	'These variables can only be accessed from this module.
+
+	Private btnSendSMS As Button
+	
+	Private spServicio As Spinner
+	Private spMonto As Spinner
+	Private txtTelefono As EditText
+	
+	Private montosDigitel As List
+	Private montosMovilnet As List
+	Private montosMovistar As List
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Do not forget to load the layout file created with the visual designer. For example:
+	
+	StartService(Starter)
+	Activity.LoadLayout("home")
+	TTS.Initialize("tts")
+	
+	spServicio.Add("Seleccione Servicio...")
+		spServicio.Add("Digitel")
+		spServicio.Add("Movilnet")
+		spServicio.Add("MOVISTARPREPAGO")
+
+	montosDigitel.Initialize
+	montosMovilnet.Initialize
+	montosMovistar.Initialize
+	
+		montosDigitel.Add("20.000")
+		montosDigitel.Add("60.000")
+		montosDigitel.Add("100.000")
+		montosDigitel.Add("200.000")
+		montosDigitel.Add("400.000")
+		
+		montosMovilnet.Add("20.000")
+		montosMovilnet.Add("30.000")
+		montosMovilnet.Add("50.000")
+		montosMovilnet.Add("100.000")
+		montosMovilnet.Add("200.000")
+		
+		montosMovistar.Add("40.000")
+		montosMovistar.Add("50.000")
+		montosMovistar.Add("80.000")
+		montosMovistar.Add("200.000")
+		montosMovistar.Add("400.000")
+	
+End Sub
+
+Sub TTS_Ready (Success As Boolean)
+	'If Success Then TTS.Speak("Hola Mundo", False)
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+
+Sub btnSendSMS_Click
+	Dim sms1 As PhoneSms
+	
+	Dim smsText As String
+	
+	smsText="Servicio " & spServicio.SelectedItem & " " & txtTelefono.Text & " " & spMonto.SelectedItem.Replace(".","") & ",00"
+	
+	Dim result As Int=Msgbox2("Recarga " & spServicio.SelectedItem & CRLF & "Monto: " & spMonto.SelectedItem & " Bs" & CRLF & "Telefono: " & txtTelefono.Text ,"Confirmar","Recargar","Cancelar","",Null)
+	
+	If result=DialogResponse.CANCEL Then
+		Return
+	End If
+	'ToastMessageShow("Enviando SMS: " & CRLF &  smsText,True)
+	sms1.Send("2661",smsText)
+	
+	spServicio.Enabled=False
+	spMonto.Enabled=False
+	txtTelefono.Enabled=False
+	btnSendSMS.Enabled=False
+	
+	ProgressDialogShow2("Enviando SMS: " & CRLF &  smsText,False)
+	'TTS.Speak("Enviando Recarga " & smsText,False)
+End Sub	
+
+Sub spServicio_ItemClick (Position As Int, Value As Object)
+	spMonto.Clear
+	spMonto.Enabled=True
+	spMonto.SelectedIndex=0
+	
+	txtTelefono.Enabled=True
+	'btnSendSMS.Enabled=True
+	
+	txtTelefono.Text="04"
+	txtTelefono.SetSelection(2,0)
+	Select Value
+		Case "Digitel"
+			spMonto.AddAll(montosDigitel)
+			txtTelefono.Text="0412"
+			txtTelefono.SetSelection(4,0)
+		Case "Movilnet"
+			spMonto.AddAll(montosMovilnet)
+		Case "MOVISTARPREPAGO"
+			spMonto.AddAll(montosMovistar)
+		Case Else
+				spMonto.Enabled=False
+				txtTelefono.Enabled=False
+				btnSendSMS.Enabled=False
+	End Select
+End Sub
+
+Sub txtTelefono_TextChanged (Old As String, New As String)
+	If New.Length=11 Then 
+		btnSendSMS.Enabled=True
+	Else
+		btnSendSMS.Enabled=False
+	End If
+End Sub
+
+Public Sub EnablebtnSend()
+	
+	spServicio.Enabled=True
+	spMonto.Enabled=True
+	txtTelefono.Enabled=True
+	btnSendSMS.Enabled=True
+	
+End Sub
+
+Public Sub ShowMensaje(Mensaje As String)
+	Msgbox(Mensaje,"Informacion")
+End Sub
